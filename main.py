@@ -1,12 +1,12 @@
 from fastapi import FastAPI
 from bson.objectid import ObjectId
 from db import products_collection, users_collection
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from utils import replace_product_id, replace_user_id
 
 
 class UserModel(BaseModel):
-    email: str
+    email: EmailStr
     password: str
 
 class ProductModel(BaseModel):
@@ -53,18 +53,11 @@ def register_user(user: UserModel):
 
 @app.post("/login")
 def login_user(user: UserModel):
-    users_collection.find_one(user.model_dump())
+    ecommerce_user_email = users_collection.find_one({"email": user.email})
+    ecommerce_user_password = users_collection.find_one({"password": user.password})
 
-
-
-
-
-
-
-#     if (users_collection.email == users_collection.email) and (users_collection.password == users_collection.password):
-#         return {"message": "Login successfull"}
-#     elif(users_collection.email != users_collection.email):
-#         return {"message": "Invalid email"}
+    if not ecommerce_user_email:
+        raise HTTPException(status_code=401, detail="Invalid email")
     
 # @app.post("/cart")
 # def cart():
