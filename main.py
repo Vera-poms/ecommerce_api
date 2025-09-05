@@ -41,13 +41,17 @@ def post_products(product: ProductModel):
     return {"message": "Product added successfully"}
 
 @app.get("/products/{product_id}")
-def get_product_by_id(product_id):
-    for product in products_collection:
-        if product["_id"] == product_id:
-            product = products_collection.find_one({"_id": ObjectId(product_id)})
-            return {"product": replace_product_id(product)}
-        else:
-            raise HTTPException(status_code=404, detail="Product not found")
+def get_product_by_id(product_id: str):
+    try:
+        product_obj_id = ObjectId(product_id)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid product id format")
+    
+    product = products_collection.find_one({"_id": product_obj_id})
+    if product:
+        return {"product": replace_product_id(product)}
+    
+    raise HTTPException(status_code=404, detail="Product not found")
 
 @app.get("/users")
 def get_users():
@@ -79,6 +83,7 @@ def login_user(user: UserModel):
     
 @app.post("/cart")
 def cart(item: CartModel):
+    get_product_by_id(item)
     users_cart.insert_one(item.model_dump())
 
     if item.quantity <= 0:
